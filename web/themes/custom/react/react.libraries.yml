@@ -1,0 +1,82 @@
+base:
+  version: VERSION
+  css:
+    component:
+      css/components/action-links.css: {}
+      css/components/breadcrumb.css: {}
+      css/components/button.css: {}
+      css/components/container-inline.css: {}
+      css/components/details.css: {}
+      css/components/exposed-filters.css: {}
+      css/components/field.css: {}
+      css/components/form.css: {}
+      css/components/icons.css: {}
+      css/components/inline-form.css: {}
+      css/components/item-list.css: {}
+      css/components/link.css: {}
+      css/components/links.css: {}
+      css/components/menu.css: {}
+      css/components/more-link.css: {}
+      css/components/pager.css: {}
+      css/components/tabledrag.css: {}
+      css/components/tableselect.css: {}
+      css/components/tablesort.css: {}
+      css/components/tabs.css: {}
+      css/components/textarea.css: {}
+      css/components/ui-dialog.css: {}
+dialog:
+  version: VERSION
+  css:
+    component:
+      css/components/dialog.css: {}
+dropbutton:
+  version: VERSION
+  css:
+    component:
+      css/components/dropbutton.css: {}
+file:
+  version: VERSION
+  css:
+    component:
+      css/components/file.css: {}
+image-widget:
+  version: VERSION
+  css:
+    component:
+      css/components/image-widget.css: {}
+indented:
+  version: VERSION
+  css:
+    component:
+      css/components/indented.css: {}
+messages:
+  version: VERSION
+  css:
+    component:
+      css/components/messages.css: {}
+node:
+  version: VERSION
+  css:
+    component:
+      css/components/node.css: {}
+progress:
+  version: VERSION
+  css:
+    component:
+      css/components/progress.css: {}
+search-results:
+  version: VERSION
+  css:
+    component:
+      css/components/search-results.css: {}
+user:
+  version: VERSION
+  css:
+    component:
+      css/components/user.css: {}
+react-app:
+  version: 1751863592
+  js:
+    js/react-app-DpliqdAf.js: {}
+  dependencies:
+    - core/drupal

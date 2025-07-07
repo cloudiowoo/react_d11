@@ -1,0 +1,42 @@
+{#
+/**
+ * @file
+ * react theme implementation to display page content type nodes.
+ * This template ensures all page content type nodes render the React application.
+ *
+ * Available variables:
+ * - page: The page render array.
+ * - node: The current node entity.
+ */
+#}
+<!-- React PAGE TEMPLATE LOADED -->
+{{ attach_library('react/react-app') }}
+
+<div class="layout-container">
+
+  <header role="banner">
+    {{ page.header }}
+  </header>
+
+  <main role="main">
+    <a id="main-content" tabindex="-1"></a>
+
+    {# React 应用容器 - 统一渲染所有 page 内容类型 #}
+    <div id="test-react-app">
+      <div class="test-loading">
+        <div class="test-loading__logo">
+          <h1 class="test-loading__logo-text">Drupal 11 + React</h1>
+        </div>
+        <div class="test-loading__spinner"></div>
+        <p class="test-loading__text">Loading<span class="test-loading__dots"></span></p>
+      </div>
+    </div>
+
+    {# 隐藏标准 Drupal 内容，因为我们使用 React 应用 #}
+    {# <div class="layout-content" style="display: none;">
+      {{ page.content }}
+    </div> #}
+
+  </main>
+
+</div>

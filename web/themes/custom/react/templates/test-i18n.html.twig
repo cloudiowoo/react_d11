@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="{{ language.id }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多语言测试 - Homtime</title>
+
+  {# 加载 React 应用的 CSS 和 JS #}
+  {{ attach_library('homtime/react-app') }}
+
+  <style>
+    body {
+      font-family: 'Roboto', 'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .test-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .language-info {
+      background: #e3f2fd;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      border-left: 4px solid #2196f3;
+    }
+
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #e0e0e0;
+      border-radius: 5px;
+    }
+
+    .test-section h3 {
+      margin-top: 0;
+      color: #1976d2;
+    }
+
+    .react-container {
+      min-height: 200px;
+      border: 2px dashed #ccc;
+      padding: 20px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+
+    .demo-button {
+      background: #1976d2;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin: 5px;
+    }
+
+    .demo-button:hover {
+      background: #1565c0;
+    }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>🌍 Homtime 多语言功能测试</h1>
+
+    <div class="language-info">
+      <h3>当前语言信息</h3>
+      <p><strong>Drupal 语言代码:</strong> {{ language.id }}</p>
+      <p><strong>语言名称:</strong> {{ language.name }}</p>
+      <p><strong>URL 前缀:</strong> {{ language.prefix }}</p>
+      <p><strong>方向:</strong> {{ language.direction }}</p>
+    </div>
+
+    <div class="test-section">
+      <h3>1. 语言切换器测试</h3>
+      <p>下面的组件应该显示当前语言并允许切换到其他语言：</p>
+      <div id="language-switcher-test" class="react-container">
+        <p>正在加载语言切换器...</p>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>2. 翻译文本测试</h3>
+      <p>下面将显示各种翻译文本：</p>
+      <div id="translation-test" class="react-container">
+        <p>正在加载翻译测试...</p>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>3. 产品信息测试</h3>
+      <p>测试产品信息的多语言显示：</p>
+      <div id="product-test" class="react-container">
+        <p>正在加载产品测试...</p>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>4. 格式化测试</h3>
+      <p>测试数字、货币和日期的本地化格式：</p>
+      <div id="format-test" class="react-container">
+        <p>正在加载格式化测试...</p>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>5. 完整应用测试</h3>
+      <p>加载完整的 Homtime React 应用：</p>
+      <button class="demo-button" onclick="loadFullApp()">加载完整应用</button>
+      <div id="full-app-test" class="react-container" style="min-height: 400px;">
+        <p>点击上方按钮加载完整应用...</p>
+      </div>
+    </div>
+
+    <div class="test-section">
+      <h3>6. 测试操作</h3>
+      <button class="demo-button" onclick="testLanguageSwitch('zh-CN')">切换到简体中文</button>
+      <button class="demo-button" onclick="testLanguageSwitch('zh-TW')">切换到繁體中文</button>
+      <button class="demo-button" onclick="testLanguageSwitch('en')">Switch to English</button>
+      <button class="demo-button" onclick="testLanguageSwitch('ja')">日本語に切り替え</button>
+      <button class="demo-button" onclick="testLanguageSwitch('ko')">한국어로 전환</button>
+    </div>
+  </div>
+
+  <script>
+    // 等待 React 应用加载
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('开始多语言测试...');
+
+      // 检查 React 应用是否已加载
+      function checkReactApp() {
+        if (typeof window.React !== 'undefined' && window.HomtimeApp) {
+          console.log('React 应用已加载，开始渲染测试组件...');
+          initializeTests();
+        } else {
+          console.log('等待 React 应用加载...');
+          setTimeout(checkReactApp, 500);
+        }
+      }
+
+      checkReactApp();
+    });
+
+    function initializeTests() {
+      // 渲染语言切换器测试
+      if (window.HomtimeApp && window.HomtimeApp.LanguageSwitcher) {
+        try {
+          const languageSwitcherContainer = document.getElementById('language-switcher-test');
+          if (languageSwitcherContainer) {
+            window.ReactDOM.render(
+              window.React.createElement(window.HomtimeApp.LanguageSwitcher, {
+                variant: 'button',
+                size: 'medium'
+              }),
+              languageSwitcherContainer
+            );
+          }
+        } catch (error) {
+          console.error('语言切换器渲染失败:', error);
+        }
+      }
+
+      // 渲染翻译测试
+      renderTranslationTest();
+
+      // 渲染产品测试
+      renderProductTest();
+
+      // 渲染格式化测试
+      renderFormatTest();
+    }
+
+    function renderTranslationTest() {
+      const container = document.getElementById('translation-test');
+      if (!container) return;
+
+      // 使用 i18next 翻译
+      if (window.i18next) {
+        const t = window.i18next.t;
+        container.innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div><strong>导航.首页:</strong> ${t('navigation.home')}</div>
+            <div><strong>导航.产品:</strong> ${t('navigation.products')}</div>
+            <div><strong>通用.加载中:</strong> ${t('common.loading')}</div>
+            <div><strong>通用.保存:</strong> ${t('common.save')}</div>
+            <div><strong>产品.价格:</strong> ${t('product.price')}</div>
+            <div><strong>产品.添加到购物车:</strong> ${t('product.addToCart')}</div>
+          </div>
+        `;
+      } else {
+        container.innerHTML = '<p style="color: red;">i18next 未加载</p>';
+      }
+    }
+
+    function renderProductTest() {
+      const container = document.getElementById('product-test');
+      if (!container || !window.i18next) return;
+
+      const t = window.i18next.t;
+      container.innerHTML = `
+        <div style="border: 1px solid #ddd; padding: 15px; border-radius: 5px;">
+          <h4>${t('product.featured.mx.name')}</h4>
+          <p><strong>${t('product.title')}:</strong> ${t('product.featured.mx.title')}</p>
+          <p><strong>${t('product.description')}:</strong> ${t('product.featured.mx.description')}</p>
+          <p><strong>${t('product.price')}:</strong> ¥299</p>
+          <button style="background: #4caf50; color: white; border: none; padding: 8px 16px; border-radius: 3px;">
+            ${t('product.addToCart')}
+          </button>
+        </div>
+      `;
+    }
+
+    function renderFormatTest() {
+      const container = document.getElementById('format-test');
+      if (!container) return;
+
+      const currentLang = window.i18next ? window.i18next.language : 'zh-CN';
+      const testNumber = 1234.56;
+      const testDate = new Date();
+
+      try {
+        const currencyFormatted = new Intl.NumberFormat(currentLang, {
+          style: 'currency',
+          currency: getCurrencyForLang(currentLang)
+        }).format(testNumber);
+
+        const dateFormatted = new Intl.DateTimeFormat(currentLang, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }).format(testDate);
+
+        const numberFormatted = new Intl.NumberFormat(currentLang).format(testNumber);
+
+        container.innerHTML = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div><strong>数字格式:</strong> ${numberFormatted}</div>
+            <div><strong>货币格式:</strong> ${currencyFormatted}</div>
+            <div><strong>日期格式:</strong> ${dateFormatted}</div>
+            <div><strong>当前语言:</strong> ${currentLang}</div>
+          </div>
+        `;
+      } catch (error) {
+        container.innerHTML = `<p style="color: red;">格式化测试失败: ${error.message}</p>`;
+      }
+    }
+
+    function getCurrencyForLang(lang) {
+      const currencyMap = {
+        'zh-CN': 'CNY',
+        'zh-TW': 'TWD',
+        'ja': 'JPY',
+        'ko': 'KRW',
+        'en': 'USD'
+      };
+      return currencyMap[lang] || 'CNY';
+    }
+
+    function testLanguageSwitch(langCode) {
+      console.log(`切换语言到: ${langCode}`);
+
+      if (window.i18next) {
+        window.i18next.changeLanguage(langCode).then(() => {
+          console.log(`语言已切换到: ${langCode}`);
+
+          // 重新渲染所有测试组件
+          setTimeout(() => {
+            renderTranslationTest();
+            renderProductTest();
+            renderFormatTest();
+          }, 100);
+
+          // 更新页面信息
+          document.documentElement.lang = langCode;
+
+          // 更新 URL
+          const url = new URL(window.location);
+          url.searchParams.set('lang', langCode);
+          window.history.replaceState({}, '', url);
+
+        }).catch(error => {
+          console.error('语言切换失败:', error);
+        });
+      } else {
+        alert('i18next 未加载，无法切换语言');
+      }
+    }
+
+    function loadFullApp() {
+      const container = document.getElementById('full-app-test');
+      if (!container) return;
+
+      if (window.HomtimeApp && window.HomtimeApp.App) {
+        try {
+          container.innerHTML = '<div id="full-app-root"></div>';
+          const appRoot = document.getElementById('full-app-root');
+
+          window.ReactDOM.render(
+            window.React.createElement(window.HomtimeApp.App),
+            appRoot
+          );
+
+          console.log('完整应用已加载');
+        } catch (error) {
+          console.error('加载完整应用失败:', error);
+          container.innerHTML = `<p style="color: red;">加载失败: ${error.message}</p>`;
+        }
+      } else {
+        container.innerHTML = '<p style="color: red;">React 应用未加载</p>';
+      }
+    }
+
+    // 监听语言变化事件
+    window.addEventListener('languageChanged', function(event) {
+      console.log('检测到语言变化:', event.detail);
+
+      // 显示通知
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4caf50;
+        color: white;
+        padding: 15px;
+        border-radius: 5px;
+        z-index: 1000;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      `;
+      notification.textContent = `语言已切换到: ${event.detail.language}`;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    });
+  </script>
+</body>
+</html>

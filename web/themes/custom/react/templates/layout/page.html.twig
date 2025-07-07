@@ -1,0 +1,127 @@
+{#
+/**
+ * @file
+ * Default theme implementation to display a single page.
+ */
+#}
+<div id="page-wrapper" class="page-wrapper">
+  <div id="page" class="page">
+
+    {% if page.header %}
+      <header id="header" class="header" role="banner">
+        <div class="container">
+          {{ page.header }}
+
+          {# 语言切换器容器 #}
+          <div id="language-switcher-container"></div>
+        </div>
+      </header>
+    {% endif %}
+
+    {% if page.highlighted %}
+      <div class="highlighted">
+        <aside class="container section clearfix" role="complementary">
+          {{ page.highlighted }}
+        </aside>
+      </div>
+    {% endif %}
+
+    <div id="main-wrapper" class="layout-main-wrapper clearfix">
+      <div id="main" class="layout-main clearfix">
+        <main id="content" class="column main-content" role="main">
+          <section class="section">
+
+            {# 标准Drupal内容区域 #}
+            {% if page.content %}
+              {{ page.content }}
+            {% endif %}
+
+            {# React页面内容容器 #}
+            <div id="react-page-content"
+                 data-page-path="{{ url('<current>') }}"
+                 data-node-id="{{ node.id() ?? '' }}"
+                 data-content-type="{{ node.bundle() ?? '' }}">
+            </div>
+
+          </section>
+        </main>
+
+        {% if page.sidebar_first %}
+          <div id="sidebar-first" class="column sidebar">
+            <aside class="section" role="complementary">
+              {{ page.sidebar_first }}
+            </aside>
+          </div>
+        {% endif %}
+
+        {% if page.sidebar_second %}
+          <div id="sidebar-second" class="column sidebar">
+            <aside class="section" role="complementary">
+              {{ page.sidebar_second }}
+
+              {# React内容列表容器 #}
+              <div id="related-content-container"></div>
+            </aside>
+          </div>
+        {% endif %}
+
+      </div>
+    </div>
+
+    {% if page.footer %}
+      <footer id="footer" class="footer" role="contentinfo">
+        <div class="container">
+          {{ page.footer }}
+        </div>
+      </footer>
+    {% endif %}
+
+  </div>
+</div>
+
+{# React应用主容器 #}
+<div id="react-app"></div>
+
+<script>
+// 页面加载完成后初始化React组件
+document.addEventListener('DOMContentLoaded', function() {
+  // 获取当前页面信息
+  const pagePath = '{{ url('<current>') }}';
+  const currentLang = '{{ language.id }}';
+
+  // 初始化语言切换器
+  if (window.HomtimeReact && window.HomtimeReact.renderLanguageSwitcher) {
+    window.HomtimeReact.renderLanguageSwitcher('language-switcher-container', {
+      current: currentLang,
+      translations: {{ languages|json_encode }},
+      pagePath: pagePath
+    });
+  }
+
+  // 初始化页面内容组件
+  if (window.HomtimeReact && window.HomtimeReact.renderPageContent) {
+    const pageContainer = document.getElementById('react-page-content');
+    if (pageContainer) {
+      const config = {
+        pagePath: pagePath,
+        nodeId: pageContainer.dataset.nodeId,
+        contentType: pageContainer.dataset.contentType,
+        language: currentLang
+      };
+      window.HomtimeReact.renderPageContent('react-page-content', config);
+    }
+  }
+
+  // 如果是产品页面，显示相关产品
+  {% if node and node.bundle() == 'product' %}
+  if (window.HomtimeReact && window.HomtimeReact.renderContentList) {
+    window.HomtimeReact.renderContentList('related-content-container', {
+      contentType: 'product',
+      limit: 5,
+      excludeIds: [{{ node.id() }}],
+      title: '相关产品'
+    });
+  }
+  {% endif %}
+});
+</script>

@@ -1,0 +1,12 @@
+name: 'Content API For React'
+type: module
+description: 'Universal Content API for React frontend with multilingual support'
+package: Custom
+core_version_requirement: ^11
+dependencies:
+  - drupal:node
+  - drupal:rest
+  - drupal:serialization
+  - drupal:language
+  - drupal:content_translation
+  - drupal:path_alias

@@ -1,0 +1,65 @@
+# 通过页面路径获取内容
+react_api.page_content:
+  path: '/api/page/{page_path}'
+  defaults:
+    _controller: '\Drupal\react_api\Controller\ContentApiController::getPageContent'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+    page_path: '.+'
+
+# 通过内容类型获取内容列表
+react_api.content_by_type:
+  path: '/api/content/{content_type}'
+  defaults:
+    _controller: '\Drupal\react_api\Controller\ContentApiController::getContentByType'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+    content_type: '[a-zA-Z_]+'
+
+# 获取单个内容项
+react_api.single_content:
+  path: '/api/content/{content_type}/{node_id}'
+  defaults:
+    _controller: '\Drupal\react_api\Controller\ContentApiController::getSingleContent'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+    content_type: '[a-zA-Z_]+'
+    node_id: '\d+'
+
+# 获取分类术语列表
+react_api.taxonomy_terms:
+  path: '/api/taxonomy/{vocabulary_id}'
+  defaults:
+    _controller: '\Drupal\react_api\Controller\ContentApiController::getTaxonomyTerms'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+    vocabulary_id: '[a-zA-Z_]+'
+
+# 获取可用语言列表
+react_api.languages:
+  path: '/api/languages'
+  defaults:
+    _controller: '\Drupal\react_api\Controller\ContentApiController::getAvailableLanguages'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+
+react_api.search:
+  path: '/api/search'
+  defaults:
+    _controller: '\Drupal\react_api\Controller\ContentApiController::searchContent'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+
+react_api.stats:
+  path: '/api/stats'
+  defaults:
+    _controller: '\Drupal\react_api\Controller\ContentApiController::getContentStats'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'

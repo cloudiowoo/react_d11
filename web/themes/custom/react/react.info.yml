@@ -1,0 +1,22 @@
+name: react
+type: theme
+'base theme': stable9
+version: 1.0.0
+libraries:
+  - react/base
+  - react/messages
+  - core/normalize
+libraries-extend:
+  user/drupal.user:
+    - react/user
+  core/drupal.dropbutton:
+    - react/dropbutton
+  core/drupal.dialog:
+    - react/dialog
+  file/drupal.file:
+    - react/file
+  core/drupal.progress:
+    - react/progress
+description: 'Drupal 11 + React Theme'
+core_version_requirement: ^11
+generator: 'starterkit_theme:11.1.8'
