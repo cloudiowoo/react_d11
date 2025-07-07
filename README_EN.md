@@ -98,15 +98,50 @@ Project Structure
 2. **Install Drupal**
    ```bash
    # Install dependencies
-   composer install
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && composer install"
+
+   # Initialize database
+   # 1. Connect to PostgreSQL
+   docker exec -it pg17 sh -c "psql -h localhost -U postgres -d postgres"
+
+   -- Create database and user
+   create database db_test_d11;
+   create user usr_test with encrypted password 'test-123';
+   \c db_test_d11
+
+   -- Basic permissions
+   GRANT ALL PRIVILEGES ON DATABASE db_test_d11 TO usr_test;
+   GRANT ALL ON SCHEMA public TO usr_test;
+   GRANT USAGE ON SCHEMA public TO usr_test;
+   GRANT CREATE ON SCHEMA public TO usr_test;
+
+   -- Object permissions
+   GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO usr_test;
+   GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO usr_test;
+   GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO usr_test;
+
+   -- Default privileges
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO usr_test;
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO usr_test;
+   ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO usr_test;
+
+   -- User level permissions
+   ALTER USER usr_test CREATEDB;
+   GRANT TEMPORARY ON DATABASE db_test_d11 TO usr_test;
+   GRANT CONNECT ON DATABASE db_test_d11 TO usr_test;
+
+   -- Update database format
+   ALTER DATABASE "db_test_d11" SET bytea_output = 'escape';
+
+   \q
 
    # Install Drupal (choose Demo: Umami Food Magazine (Experimental))
-   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush site:install demo_umami \
-     --db-url=pgsql://postgres:[your+db+password]@pg17:5432/[your+db] \
-     --account-name=[your+name] \
-     --account-pass=[your+password] \
-     --site-name='Drupal 11 + React Demo' \
-     -y"
+   docker exec -it php8-4-fpm-xdebug sh -c 'cd /var/www/webs/test_d11 && vendor/bin/drush site:install demo_umami \
+     --db-url="pgsql://usr_test:test-123@pg17:5432/db_test_d11" \
+     --account-name=admin \
+     --account-pass=admin \
+     --site-name="Drupal 11 + React Demo" \
+     -y'
    ```
 
    After installation, you can configure the system using either of these two methods:
@@ -185,7 +220,7 @@ Project Structure
    # - Preview changes in real-time
 
    # Clear Drupal cache when needed
-   docker exec -it php8-4-fpm-xdebug drush cr
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush cr"
    ```
 
 ## 📱 Demo Features

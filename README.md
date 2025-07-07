@@ -98,15 +98,52 @@
 2. **安装 Drupal**
    ```bash
    # 安装依赖
-   composer install
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && composer install"
+
+   # 初始化数据库
+   # 1. 连接到 PostgreSQL
+   docker exec -it pg17 sh -c "psql -h localhost -U postgres -d postgres"
+
+    -- 创建数据库和用户
+    create database db_test_d11;
+    create user usr_test with encrypted password 'test-123';
+    \c db_test_d11
+
+
+    -- 基础权限
+    GRANT ALL PRIVILEGES ON DATABASE db_test_d11 TO usr_test;
+    GRANT ALL ON SCHEMA public TO usr_test;
+    GRANT USAGE ON SCHEMA public TO usr_test;
+    GRANT CREATE ON SCHEMA public TO usr_test;
+
+    -- 对象权限
+    GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO usr_test;
+    GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO usr_test;
+    GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO usr_test;
+
+    -- 默认权限
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO usr_test;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO usr_test;
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON FUNCTIONS TO usr_test;
+
+    -- 用户级权限
+    ALTER USER usr_test CREATEDB;
+    GRANT TEMPORARY ON DATABASE db_test_d11 TO usr_test;
+    GRANT CONNECT ON DATABASE db_test_d11 TO usr_test;
+
+    -- 数据库更新格式
+    ALTER DATABASE "db_test_d11" SET bytea_output = 'escape';
+
+    \q
+
 
    # 安装 Drupal（选择 Demo: Umami Food Magazine (Experimental)）
-   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush site:install demo_umami \
-     --db-url=pgsql://postgres:[your+db+password]@pg17:5432/[your+db] \
-     --account-name=[your+name] \
-     --account-pass=[your+password] \
-     --site-name='Drupal 11 + React Demo' \
-     -y"
+   docker exec -it php8-4-fpm-xdebug sh -c 'cd /var/www/webs/test_d11 && vendor/bin/drush site:install demo_umami \
+    --db-url="pgsql://usr_test:test-123@pg17:5432/db_test_d11" \
+    --account-name=admin \
+    --account-pass=admin \
+    --site-name="Drupal 11 + React Demo" \
+    -y'
    ```
 
    安装完成后，您可以通过以下两种方式进行系统配置：
@@ -185,7 +222,7 @@
    # - 实时预览变更
 
    # 需要时清除 Drupal 缓存
-   docker exec -it php8-4-fpm-xdebug drush cr
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush cr"
    ```
 
 ## 📱 演示功能
