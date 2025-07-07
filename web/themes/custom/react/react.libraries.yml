@@ -75,8 +75,8 @@ user:
     component:
       css/components/user.css: {}
 react-app:
-  version: 1751871969
+  version: 1751876643
   js:
-    js/react-app-DFLtfDLI.js: {}
+    js/react-app-DsAvX2Rj.js: {}
   dependencies:
     - core/drupal

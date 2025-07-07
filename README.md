@@ -1,5 +1,7 @@
 # Drupal 11 + React 全栈应用
 
+[English](README_EN.md) | [中文](README.md)
+
 基于 Drupal 11 和 React 18 构建的现代化全栈应用框架，实现内容管理与前端交互的最佳实践。
 本项目的 React 主题基于 Drupal 11 默认演示数据（Umami 食谱）定制开发，提供完整的参考实现。
 

@@ -8,6 +8,8 @@ import RecipeDetail from './components/RecipeDetail'
 import RecipeList from './components/RecipeList'
 import { initializeLanguage } from './utils/drupalLanguageSync'
 
+
+
 function App({ drupalData = {} }) {
   const { i18n } = useTranslation()
   const [currentLang, setCurrentLang] = useState(i18n.language || 'zh-CN')
