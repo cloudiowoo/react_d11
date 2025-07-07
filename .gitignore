@@ -179,31 +179,32 @@ pids/
 # Docker 相关
 # ===============
 
-# Docker配置和构建文件
-docker/
-!docker/docker-compose.yml
-!docker/Dockerfile.*
-docker/**/data/
-docker/**/logs/
+# Docker 敏感配置文件
+docker/**/docker-compose.yml
+docker-compose.yml
+docker-compose.override.yml
+.dockerignore
+
+# Docker 数据和日志目录
 docker/pg/data/
 docker/pg/logs/
 docker/fpm/logs/
 docker/nginx/logs/
+docker/**/data/
+docker/**/logs/
 
-# Docker运行时文件
-.docker/
-docker-compose.override.yml
-.dockerignore
-
-# Docker环境变量
+# Docker 环境变量
 .env.docker
 docker/**/.env
 
-# Docker日志和数据
-*.log
-docker/**/*.log
-docker/**/data
-docker-compose.override.yaml
+# 保留重要的 Docker 配置文件
+!docker/Dockerfile.*
+!docker/docker-compose.yml.example
+!docker/README.md
+!docker/nginx/nginx.conf
+!docker/nginx/vhosts/
+!docker/fpm/8.4/php.ini
+!docker/fpm/8.4/www.conf
 
 # ===============
 # 测试和覆盖率
