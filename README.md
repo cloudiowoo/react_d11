@@ -101,17 +101,76 @@
    composer install
 
    # 安装 Drupal（选择 Demo: Umami Food Magazine (Experimental)）
-   docker exec -it php8-4-fpm-xdebug drush site:install demo_umami \
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush site:install demo_umami \
      --db-url=pgsql://postgres:[your+db+password]@pg17:5432/[your+db] \
      --account-name=[your+name] \
      --account-pass=[your+password] \
-     --site-name="Drupal 11 + React Demo" \
-     -y
+     --site-name='Drupal 11 + React Demo' \
+     -y"
+   ```
 
-   # 启用多语言支持
-   docker exec -it php8-4-fpm-xdebug drush en locale -y
-   docker exec -it php8-4-fpm-xdebug drush language-add zh-hans
-   docker exec -it php8-4-fpm-xdebug drush language-add es
+   安装完成后，您可以通过以下两种方式进行系统配置：
+
+   ### A. 通过管理后台配置（推荐）
+
+   1. **启用必要模块**
+      - 访问 `http://local.test.d11.com/admin/modules`
+      - 勾选并启用以下模块：
+        - React API（自定义模块）
+        - JSON:API（API 依赖）
+        - RESTful Web Services（API 依赖）
+      - 点击"安装"按钮
+
+   2. **多语言设置**
+      - 访问 `http://local.test.d11.com/admin/config/regional/language`
+      - 添加中文（简体）和西班牙语
+      - 将英语设置为默认语言
+      - 在"Detection and Selection"设置中：
+        - 访问 `http://local.test.d11.com/admin/config/regional/language/detection`
+        - 将"URL 语言检测"拖动到最顶部
+        - 保存配置
+
+   3. **启用 React 主题**
+      - 访问 `http://local.test.d11.com/admin/appearance`
+      - 找到"React Theme"点击"设置为默认主题"
+      - 访问 `http://local.test.d11.com/admin/structure/block`
+      - 仅保留"Main page content"区块，禁用其他所有区块
+
+   ### B. 通过命令行配置
+
+   ```bash
+   # 启用必要的模块
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush en react_api jsonapi rest -y"
+
+   # 多语言设置优化
+   # 启用多语言支持并添加语言
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush en locale -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush language-add zh-hans"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush language-add es"
+
+   # 设置英语为默认语言
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush language-default en"
+
+   # 设置语言检测顺序，将 URL 检测方式设为首选
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set language.types.negotiation.language_interface.enabled path 1 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set language.types.negotiation.language_interface.enabled language-browser 2 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set language.types.negotiation.language_interface.enabled user 3 -y"
+
+   # 启用 React 主题
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush theme:enable react -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set system.theme default react -y"
+
+   # 清理区块设置（仅保留页面内容）
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_content status 1 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_breadcrumbs status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_help status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_messages status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_page_title status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_primary_local_tasks status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_secondary_local_tasks status 0 -y"
+
+   # 清除缓存以应用更改
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush cr"
    ```
 
 3. **开发自动化**

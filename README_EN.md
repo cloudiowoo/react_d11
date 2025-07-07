@@ -101,17 +101,76 @@ Project Structure
    composer install
 
    # Install Drupal (choose Demo: Umami Food Magazine (Experimental))
-   docker exec -it php8-4-fpm-xdebug drush site:install demo_umami \
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush site:install demo_umami \
      --db-url=pgsql://postgres:[your+db+password]@pg17:5432/[your+db] \
      --account-name=[your+name] \
      --account-pass=[your+password] \
-     --site-name="Drupal 11 + React Demo" \
-     -y
+     --site-name='Drupal 11 + React Demo' \
+     -y"
+   ```
 
-   # Enable multilingual support
-   docker exec -it php8-4-fpm-xdebug drush en locale -y
-   docker exec -it php8-4-fpm-xdebug drush language-add zh-hans
-   docker exec -it php8-4-fpm-xdebug drush language-add es
+   After installation, you can configure the system using either of these two methods:
+
+   ### A. Configure via Admin UI (Recommended)
+
+   1. **Enable Required Modules**
+      - Visit `http://local.test.d11.com/admin/modules`
+      - Check and enable the following modules:
+        - React API (Custom module)
+        - JSON:API (API dependency)
+        - RESTful Web Services (API dependency)
+      - Click "Install" button
+
+   2. **Language Settings**
+      - Visit `http://local.test.d11.com/admin/config/regional/language`
+      - Add Chinese (Simplified) and Spanish
+      - Set English as the default language
+      - In "Detection and Selection" settings:
+        - Visit `http://local.test.d11.com/admin/config/regional/language/detection`
+        - Drag "URL language detection" to the top
+        - Save configuration
+
+   3. **Enable React Theme**
+      - Visit `http://local.test.d11.com/admin/appearance`
+      - Find "React Theme" and click "Set as default"
+      - Visit `http://local.test.d11.com/admin/structure/block`
+      - Keep only "Main page content" block, disable all others
+
+   ### B. Configure via Command Line
+
+   ```bash
+   # Enable required modules
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush en react_api jsonapi rest -y"
+
+   # Multilingual settings optimization
+   # Enable multilingual support and add languages
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush en locale -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush language-add zh-hans"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush language-add es"
+
+   # Set English as default language
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush language-default en"
+
+   # Configure language detection order, set URL detection as primary
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set language.types.negotiation.language_interface.enabled path 1 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set language.types.negotiation.language_interface.enabled language-browser 2 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set language.types.negotiation.language_interface.enabled user 3 -y"
+
+   # Enable React theme
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush theme:enable react -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set system.theme default react -y"
+
+   # Clean up block settings (keep only page content)
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_content status 1 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_breadcrumbs status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_help status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_messages status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_page_title status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_primary_local_tasks status 0 -y"
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush config:set block.block.react_secondary_local_tasks status 0 -y"
+
+   # Clear cache to apply changes
+   docker exec -it php8-4-fpm-xdebug sh -c "cd /var/www/webs/test_d11 && vendor/bin/drush cr"
    ```
 
 3. **Development Automation**
