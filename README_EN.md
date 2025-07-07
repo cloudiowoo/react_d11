@@ -1,8 +1,8 @@
-# Drupal 11 + React Full Stack Application
+# Drupal 11 + React Theme Solution
 
 [English](README_EN.md) | [中文](README.md)
 
-A modern full-stack application framework built on Drupal 11 and React 18, implementing best practices for content management and frontend interaction.
+A Drupal 11 theme solution built with React 18, implementing best practices for content management and frontend interaction.
 This project's React theme is custom-developed based on Drupal 11's default demo data (Umami recipes), providing a complete reference implementation.
 
 ## 💡 Features
