@@ -1,0 +1,57 @@
+{#
+/**
+ * @file
+ * react theme implementation to display a single page.
+ *
+ * Available variables:
+ * - page: The page render array.
+ */
+#}
+<!-- react CUSTOM TEMPLATE LOADED -->
+{{ attach_library('react/react-app') }}
+
+<div class="layout-container">
+
+  <header role="banner">
+    {{ page.header }}
+  </header>
+
+  {# {{ page.primary_menu }}
+  {{ page.secondary_menu }} #}
+
+  {# {{ page.breadcrumb }} #}
+
+  {# {{ page.highlighted }} #}
+
+  {# {{ page.help }} #}
+
+  <main role="main">
+    <a id="main-content" tabindex="-1"></a>
+
+    {# React 应用容器 #}
+    <div id="test-react-app">
+      <div class="react-loading">
+        <div class="react-loading__logo">
+          <h1 class="react-loading__logo-text">Drupal 11 + React</h1>
+        </div>
+        <div class="react-loading__spinner"></div>
+        <p class="react-loading__text">Loading<span class="react-loading__dots"></span></p>
+      </div>
+    </div>
+
+    {# <div class="layout-content">
+      {{ page.content }}
+    </div>
+
+    {{ page.sidebar_first }}
+    {{ page.sidebar_second }} #}
+
+  </main>
+
+  {# {% if page.footer %}
+    <footer role="contentinfo">
+      {{ page.footer }}
+    </footer>
+  {% endif %} #}
+
+</div>

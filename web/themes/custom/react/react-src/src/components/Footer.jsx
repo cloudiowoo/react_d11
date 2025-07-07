@@ -1,9 +1,15 @@
+/*
+ * @Date: 2025-07-07 09:50:17
+ * @LastEditors: cloudio cloudio.woo@gmail.com
+ * @LastEditTime: 2025-07-07 12:55:41
+ * @FilePath: /test_d11/web/themes/custom/react/react-src/src/components/Footer.jsx
+ */
 import {
-    Box,
-    Button,
-    Container,
-    Grid,
-    Typography
+  Box,
+  Button,
+  Container,
+  Grid,
+  Typography
 } from '@mui/material';
 import React from 'react';
 import { useTranslation } from 'react-i18next';

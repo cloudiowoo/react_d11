@@ -356,10 +356,20 @@ const HomePage = () => {
     const defaultImage = '/themes/custom/react/images/hero-pasta.jpg';
     const backgroundImage = heroImage || defaultImage;
 
-    // 获取摘要内容，优先使用processed格式（包含HTML）
-    const summaryContent = heroRecipe.fields?.field_summary?.processed ||
-                         heroRecipe.fields?.field_summary?.value ||
-                         'A wholesome pasta bake is the ultimate comfort food. This delicious bake is super quick to prepare and an ideal midweek meal for all the family.';
+    // 修复摘要内容的处理 - 防止渲染对象
+    let summaryContent = 'A wholesome pasta bake is the ultimate comfort food. This delicious bake is super quick to prepare and an ideal midweek meal for all the family.';
+    if (heroRecipe.fields?.field_summary) {
+      const summaryField = heroRecipe.fields.field_summary;
+      if (typeof summaryField === 'string') {
+        summaryContent = summaryField;
+      } else if (summaryField.processed && typeof summaryField.processed === 'string') {
+        summaryContent = summaryField.processed;
+      } else if (summaryField.value && typeof summaryField.value === 'string') {
+        summaryContent = summaryField.value;
+      } else {
+        console.warn('无法解析Hero摘要字段:', summaryField);
+      }
+    }
 
     return (
       <Box sx={{
@@ -449,6 +459,24 @@ const HomePage = () => {
     const defaultImage = '/themes/custom/react/images/article-default.jpg';
     const displayImage = articleImage || defaultImage;
 
+    // 修复摘要字段的处理 - 防止渲染对象
+    let summaryText = 'Transform your morning routine with these delicious oatmeal recipes.';
+    if (article.fields?.field_summary) {
+      const summaryField = article.fields.field_summary;
+      if (typeof summaryField === 'string') {
+        summaryText = summaryField;
+      } else if (summaryField.processed && typeof summaryField.processed === 'string') {
+        // 移除HTML标签
+        summaryText = summaryField.processed.replace(/<[^>]*>/g, '');
+      } else if (summaryField.value && typeof summaryField.value === 'string') {
+        summaryText = summaryField.value;
+      } else {
+        console.warn('无法解析文章摘要字段:', summaryField);
+      }
+    } else if (article.summary && typeof article.summary === 'string') {
+      summaryText = article.summary;
+    }
+
     return (
       <Box sx={{ mb: 6 }}>
         <Container maxWidth="lg">
@@ -458,7 +486,7 @@ const HomePage = () => {
                 {article.title || 'Give your oatmeal the ultimate makeover'}
               </Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                {article.fields?.field_summary?.processed || article.fields?.field_summary?.value || 'Transform your morning routine with these delicious oatmeal recipes.'}
+                {summaryText}
               </Typography>
               <Button
                 variant="text"

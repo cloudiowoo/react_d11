@@ -269,26 +269,89 @@ class ContentApiService {
    * 获取食谱列表 (使用自定义 API)
    */
   async getRecipes(params = {}) {
-    const defaultParams = {
-      limit: params.limit || 10,
-      sort: '-created',
+    console.log('[ContentApiService] getRecipes called with params:', params);
+
+    // 处理分页参数
+    const page = params.page || 0; // API使用0开始的页码
+    const limit = params.limit || 10;
+
+    // 构建查询参数
+    const queryParams = {
+      page,
+      limit,
+      sort: params.sort || 'created',
+      order: params.order || 'DESC',
       status: 1,
-      include: 'field_recipe_image,field_recipe_category',
+      include: 'field_recipe_image,field_recipe_category'
     };
 
-    const mergedParams = { ...defaultParams, ...params };
-    const cacheKey = `recipes_${JSON.stringify(mergedParams)}_${this.currentLanguage}`;
+    // 处理搜索过滤器
+    if (params['filter[title][operator]'] && params['filter[title][value]']) {
+      queryParams['filter[title][operator]'] = params['filter[title][operator]'];
+      queryParams['filter[title][value]'] = params['filter[title][value]'];
+    }
+
+    // 处理分类过滤器
+    if (params['filter[field_recipe_category.target_id]']) {
+      queryParams['filter[field_recipe_category.target_id]'] = params['filter[field_recipe_category.target_id]'];
+    }
+
+    // 处理难度过滤器
+    if (params['filter[field_difficulty]']) {
+      queryParams['filter[field_difficulty]'] = params['filter[field_difficulty]'];
+    }
+
+    // 添加其他自定义参数
+    Object.keys(params).forEach(key => {
+      if (!queryParams.hasOwnProperty(key) && key.startsWith('filter[')) {
+        queryParams[key] = params[key];
+      }
+    });
+
+    console.log('[ContentApiService] Final query params:', queryParams);
+
+    const cacheKey = `recipes_${JSON.stringify(queryParams)}_${this.currentLanguage}`;
 
     // 检查缓存
     const cached = this.getCachedData(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      console.log('[ContentApiService] Returning cached data for:', cacheKey);
+      return cached;
+    }
 
-    const url = this.buildCustomApiUrl('content/recipe', mergedParams);
-    const data = await this.makeRequest(url);
+    try {
+      const url = this.buildCustomApiUrl('content/recipe', queryParams);
+      console.log('[ContentApiService] Making request to:', url);
 
-    // 缓存数据
-    this.setCachedData(cacheKey, data);
-    return data;
+      const data = await this.makeRequest(url);
+      console.log('[ContentApiService] API response:', data);
+
+      // 处理响应数据结构
+      let processedData = data;
+
+      // 如果API返回标准格式，确保有正确的结构
+      if (data && !data.hasOwnProperty('items') && !data.hasOwnProperty('data')) {
+        // 如果直接返回数组，包装成标准格式
+        if (Array.isArray(data)) {
+          processedData = {
+            items: data,
+            pagination: {
+              page,
+              limit,
+              total: data.length,
+              totalPages: Math.ceil(data.length / limit)
+            }
+          };
+        }
+      }
+
+      // 缓存数据
+      this.setCachedData(cacheKey, processedData);
+      return processedData;
+    } catch (error) {
+      console.error('[ContentApiService] Error fetching recipes:', error);
+      throw error;
+    }
   }
 
   /**
@@ -422,29 +485,111 @@ class ContentApiService {
   }
 
   /**
-   * 获取文章列表 (使用自定义 API)
+   * 获取文章列表
+   * @param {Object} options 查询选项
+   * @returns {Promise<Object>} 文章列表数据
    */
-  async getArticles(params = {}) {
-    const defaultParams = {
-      limit: params.limit || 10,
-      sort: '-created',
-      status: 1,
-      include: 'field_image',
-    };
+  async getArticles(options = {}) {
+    const {
+      page = 1,
+      limit = 12,
+      category = null,
+      tags = null,
+      sort = 'created',
+      order = 'DESC'
+    } = options;
 
-    const mergedParams = { ...defaultParams, ...params };
-    const cacheKey = `articles_${JSON.stringify(mergedParams)}_${this.currentLanguage}`;
+    // 参数验证和修正
+    const validPage = Math.max(1, parseInt(page) || 1);
+    const validLimit = Math.max(1, parseInt(limit) || 12);
+
+    console.log('[ContentApiService] getArticles called with:', {
+      originalPage: page,
+      validPage,
+      limit: validLimit,
+      category,
+      tags,
+      sort,
+      order
+    });
+
+    const cacheKey = `articles_${JSON.stringify({...options, page: validPage, limit: validLimit})}_${this.currentLanguage}`;
 
     // 检查缓存
-    const cached = this.getCachedData(cacheKey);
-    if (cached) return cached;
+    if (this.cache.has(cacheKey)) {
+      console.log('[ContentApiService] Returning cached articles data');
+      return this.cache.get(cacheKey);
+    }
 
-    const url = this.buildCustomApiUrl('content/article', mergedParams);
-    const data = await this.makeRequest(url);
+    try {
+      // 计算正确的offset值 - 使用validPage确保不会是负数
+      const offset = Math.max(0, (validPage - 1) * validLimit);
 
-    // 缓存数据
-    this.setCachedData(cacheKey, data);
-    return data;
+      const params = {
+        limit: validLimit,
+        sort: order === 'DESC' ? `-${sort}` : sort,
+        offset: offset
+      };
+
+      // 添加过滤条件
+      if (category) params['filter[field_article_category.target_id]'] = category;
+      if (tags) params['filter[field_tags.target_id]'] = tags;
+
+      const url = this.buildCustomApiUrl('content/article', params);
+      console.log('[ContentApiService] Fetching articles from:', url);
+      console.log('[ContentApiService] Final API params:', params);
+
+      const data = await this.makeRequest(url);
+      console.log('[ContentApiService] Articles API response:', data);
+
+      // 处理不同的响应格式
+      let result;
+      if (data && data.items) {
+        result = {
+          success: true,
+          data: data.items,
+          pagination: {
+            currentPage: validPage,
+            totalItems: data.pagination?.total || data.items.length,
+            totalPages: data.pagination?.totalPages || Math.ceil((data.pagination?.total || data.items.length) / validLimit),
+            itemsPerPage: validLimit,
+            ...data.pagination
+          }
+        };
+      } else if (Array.isArray(data)) {
+        result = {
+          success: true,
+          data: data,
+          pagination: {
+            currentPage: validPage,
+            totalItems: data.length,
+            totalPages: Math.ceil(data.length / validLimit),
+            itemsPerPage: validLimit
+          }
+        };
+      } else {
+        result = {
+          success: true,
+          data: [],
+          pagination: {
+            currentPage: 1,
+            totalItems: 0,
+            totalPages: 0,
+            itemsPerPage: validLimit
+          }
+        };
+      }
+
+      console.log('[ContentApiService] Processed articles result:', result);
+
+      // 缓存结果
+      this.cache.set(cacheKey, result);
+      return result;
+
+    } catch (error) {
+      console.error('[ContentApiService] 获取文章列表失败:', error);
+      throw error;
+    }
   }
 
   /**
@@ -458,24 +603,117 @@ class ContentApiService {
       if (cached) return cached;
     }
 
-    const params = {
-      include: 'field_image',
-    };
+    try {
+      const url = this.buildCustomApiUrl(`content/article/${id}`);
+      console.log('Fetching article from:', url);
 
-    const url = this.buildCustomApiUrl(`content/article/${id}`, params);
-    const data = await this.makeRequest(url);
+      const data = await this.makeRequest(url);
+      console.log('Article API response:', data);
 
-    if (useCache) {
-      this.setCachedData(cacheKey, data);
+      if (useCache) {
+        this.setCachedData(cacheKey, data);
+      }
+
+      return data;
+
+    } catch (error) {
+      console.error(`获取文章失败 (ID: ${id}):`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * 通过URL别名获取文章
+   * @param {string} urlAlias URL别名
+   * @returns {Promise<Object>} 文章数据
+   */
+  async getArticleByUrlAlias(urlAlias) {
+    const cacheKey = `article_alias_${urlAlias}_${this.currentLanguage}`;
+
+    // 检查缓存
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
     }
 
-    return data;
+    try {
+      // 获取所有文章并查找匹配的URL
+      const articlesResponse = await this.getArticles({ limit: 100 });
+      const articles = articlesResponse.data || articlesResponse.items || [];
+
+      console.log(`搜索文章URL别名: ${urlAlias}, 当前语言: ${this.currentLanguage}`);
+
+      for (const article of articles) {
+        // 调试日志
+        console.log(`检查文章: ${article.title}, ID: ${article.id}`);
+        console.log('文章URLs:', article.urls);
+        console.log('文章URL:', article.url);
+
+        // 1. 优先检查 urls 对象中的当前语言URL
+        if (article.urls && typeof article.urls === 'object') {
+          const currentLangUrl = article.urls[this.currentLanguage];
+          if (currentLangUrl && currentLangUrl.canonical) {
+            const currentUrlPath = new URL(currentLangUrl.canonical).pathname;
+            const currentLastSegment = currentUrlPath.split('/').pop();
+            console.log(`当前语言(${this.currentLanguage})URL最后段: ${currentLastSegment} vs ${urlAlias}`);
+
+            if (currentLastSegment === urlAlias) {
+              console.log('✓ 当前语言URL匹配成功');
+              this.cache.set(cacheKey, article);
+              return article;
+            }
+          }
+
+          // 2. 如果当前语言没有匹配，检查所有语言的URL
+          for (const [lang, langUrlData] of Object.entries(article.urls)) {
+            if (langUrlData && langUrlData.canonical) {
+              try {
+                const urlPath = new URL(langUrlData.canonical).pathname;
+                const lastSegment = urlPath.split('/').pop();
+                console.log(`语言(${lang})URL最后段: ${lastSegment} vs ${urlAlias}`);
+
+                if (lastSegment === urlAlias) {
+                  console.log(`✓ 语言(${lang})URL匹配成功`);
+                  this.cache.set(cacheKey, article);
+                  return article;
+                }
+              } catch (urlError) {
+                console.warn(`解析URL失败 (${lang}):`, langUrlData.canonical, urlError);
+              }
+            }
+          }
+        }
+
+        // 3. 最后检查主URL字段
+        if (article.url) {
+          try {
+            const urlPath = new URL(article.url).pathname;
+            const lastSegment = urlPath.split('/').pop();
+            console.log(`主URL最后段: ${lastSegment} vs ${urlAlias}`);
+
+            if (lastSegment === urlAlias) {
+              console.log('✓ 主URL匹配成功');
+              this.cache.set(cacheKey, article);
+              return article;
+            }
+          } catch (urlError) {
+            console.warn('解析主URL失败:', article.url, urlError);
+          }
+        }
+      }
+
+      throw new Error(`未找到URL别名为 "${urlAlias}" 的文章`);
+    } catch (error) {
+      console.error('通过URL别名获取文章失败:', error);
+      throw error;
+    }
   }
 
   /**
    * 获取食谱分类 (使用自定义 API)
    */
   async getRecipeCategories(params = {}) {
+    console.log('[ContentApiService] getRecipeCategories called with params:', params);
+
     const defaultParams = {
       sort: 'name',
       limit: params.limit || 50,
@@ -486,14 +724,47 @@ class ContentApiService {
 
     // 检查缓存
     const cached = this.getCachedData(cacheKey);
-    if (cached) return cached;
+    if (cached) {
+      console.log('[ContentApiService] Returning cached categories data');
+      return cached;
+    }
 
-    const url = this.buildCustomApiUrl('taxonomy/recipe_category', mergedParams);
-    const data = await this.makeRequest(url);
+    try {
+      const url = this.buildCustomApiUrl('taxonomy/recipe_category', mergedParams);
+      console.log('[ContentApiService] Making categories request to:', url);
 
-    // 缓存数据
-    this.setCachedData(cacheKey, data);
-    return data;
+      const data = await this.makeRequest(url);
+      console.log('[ContentApiService] Categories API response:', data);
+
+      // 处理响应数据结构
+      let processedData = data;
+
+      // 如果API返回标准格式，确保有正确的结构
+      if (data && !data.hasOwnProperty('items') && !data.hasOwnProperty('data')) {
+        // 如果直接返回数组，包装成标准格式
+        if (Array.isArray(data)) {
+          processedData = {
+            items: data,
+            total: data.length
+          };
+        }
+      }
+
+      // 缓存数据
+      this.setCachedData(cacheKey, processedData);
+      return processedData;
+    } catch (error) {
+      console.error('[ContentApiService] Error fetching recipe categories:', error);
+
+      // 返回空结果而不是抛出错误，让页面继续工作
+      const emptyResult = {
+        items: [],
+        total: 0
+      };
+
+      this.setCachedData(cacheKey, emptyResult);
+      return emptyResult;
+    }
   }
 
   /**
@@ -1027,6 +1298,208 @@ class ContentApiService {
     } catch (error) {
       console.error('[ContentApiService] Error fetching recipes by category:', error);
       throw new Error(`Failed to fetch recipes by category: ${error.message}`);
+    }
+  }
+
+  // ==========================================
+  // 文章相关方法
+  // ==========================================
+
+  /**
+   * 获取文章分类
+   * @param {Object} options 查询选项
+   * @returns {Promise<Object>} 分类数据
+   */
+  async getArticleCategories(options = {}) {
+    const { limit = 20 } = options;
+    const cacheKey = `article_categories_${limit}_${this.currentLanguage}`;
+
+    // 检查缓存
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    try {
+      const params = { limit };
+      const url = this.buildCustomApiUrl('taxonomy/article_category', params);
+      console.log('Fetching article categories from:', url);
+
+      const data = await this.makeRequest(url);
+      console.log('Article categories API response:', data);
+
+      // 处理响应格式
+      let result;
+      if (data && data.items) {
+        result = {
+          success: true,
+          data: data.items
+        };
+      } else if (Array.isArray(data)) {
+        result = {
+          success: true,
+          data: data
+        };
+      } else {
+        result = {
+          success: true,
+          data: []
+        };
+      }
+
+      // 缓存结果
+      this.cache.set(cacheKey, result);
+      return result;
+
+    } catch (error) {
+      console.error('获取文章分类失败:', error);
+      // 返回空结果而不是抛出错误
+      return {
+        success: true,
+        data: []
+      };
+    }
+  }
+
+  /**
+   * 根据分类获取相关文章
+   * @param {string} categoryId 分类ID
+   * @param {string} excludeArticleId 要排除的文章ID
+   * @param {number} limit 限制数量
+   * @returns {Promise<Array>} 相关文章列表
+   */
+  async getArticlesByCategory(categoryId, excludeArticleId = null, limit = 4) {
+    const cacheKey = `articles_by_category_${categoryId}_${excludeArticleId}_${limit}_${this.currentLanguage}`;
+
+    // 检查缓存
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+
+    try {
+      const params = {
+        limit: limit + (excludeArticleId ? 1 : 0), // 如果需要排除，多获取一个
+        sort: '-created'
+      };
+
+      // 添加分类过滤
+      if (categoryId) {
+        params['filter[field_article_category.target_id]'] = categoryId;
+      }
+
+      const url = this.buildCustomApiUrl('content/article', params);
+      console.log('Fetching articles by category from:', url);
+
+      const data = await this.makeRequest(url);
+      console.log('Articles by category API response:', data);
+
+      let articles = [];
+
+      // 处理不同的响应格式
+      if (data && data.items) {
+        articles = data.items;
+      } else if (Array.isArray(data)) {
+        articles = data;
+      }
+
+      // 排除当前文章
+      if (excludeArticleId) {
+        articles = articles.filter(article =>
+          article.id !== excludeArticleId &&
+          article.id !== parseInt(excludeArticleId)
+        );
+      }
+
+      // 限制数量
+      articles = articles.slice(0, limit);
+
+      // 缓存结果
+      this.cache.set(cacheKey, articles);
+      return articles;
+
+    } catch (error) {
+      console.error('获取相关文章失败:', error);
+      return []; // 返回空数组而不是抛出错误
+    }
+  }
+
+  // 根据分类获取文章
+  async getArticlesByCategory(categoryId, excludeId = null, limit = 6) {
+    try {
+      console.log(`获取分类文章: categoryId=${categoryId}, excludeId=${excludeId}, limit=${limit}`);
+
+      // 构建请求参数
+      const params = new URLSearchParams({
+        'page': '0',
+        'limit': limit.toString(),
+        'sort': 'created',
+        'order': 'DESC'
+      });
+
+      // 添加分类过滤条件
+      if (categoryId) {
+        params.set('filter[field_article_category.target_id]', categoryId.toString());
+      }
+
+      // 如果有排除的文章ID，添加到过滤条件
+      if (excludeId) {
+        params.set('filter[nid][operator]', '!=');
+        params.set('filter[nid][value]', excludeId.toString());
+      }
+
+      const url = `${this.baseUrl}/content/article?${params.toString()}`;
+      console.log('分类文章请求URL:', url);
+
+      const response = await this.makeRequest(url);
+      console.log('分类文章响应:', response);
+
+      // 处理响应数据
+      if (response && response.data) {
+        return response.data;
+      } else if (Array.isArray(response)) {
+        return response;
+      } else {
+        console.warn('分类文章响应格式不符合预期:', response);
+        return [];
+      }
+    } catch (error) {
+      console.error('获取分类文章失败:', error);
+
+      // 如果按分类获取失败，尝试获取所有文章然后手动过滤
+      try {
+        console.log('尝试获取所有文章进行手动过滤...');
+        const allArticles = await this.getArticles({ limit: 20 });
+        let articles = allArticles.data || allArticles || [];
+
+        // 如果有分类ID，手动过滤分类
+        if (categoryId) {
+          articles = articles.filter(article => {
+            const categoryField = article.fields?.field_article_category;
+            if (!categoryField) return false;
+
+            const articleCategoryId =
+              categoryField.data?.id ||
+              categoryField.target_id ||
+              categoryField.id ||
+              categoryField;
+
+            return articleCategoryId == categoryId;
+          });
+        }
+
+        // 排除当前文章
+        if (excludeId) {
+          articles = articles.filter(article => article.id != excludeId);
+        }
+
+        // 限制数量
+        articles = articles.slice(0, limit);
+
+        console.log('手动过滤后的分类文章:', articles);
+        return articles;
+      } catch (fallbackError) {
+        console.error('手动过滤也失败:', fallbackError);
+        return [];
+      }
     }
   }
 }

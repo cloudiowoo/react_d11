@@ -1,0 +1,78 @@
+services:
+
+  pg17:
+    image: postgres:17
+    restart: always
+    container_name: pg17
+    ports:
+    - "5431:5432"
+    environment:
+     POSTGRES_PASSWORD: your_password_here
+    volumes:
+    - ./pg/v17/data:/var/lib/postgresql/data:delegated
+    - ./pg/v17/log:/var/log/postgresql:delegated
+    command: postgres -c logging_collector=on -c log_destination=stderr -c log_directory=/var/log/postgresql
+    networks:
+      compose-net:
+        ipv4_address: your_ip_here
+
+  php8-4-fpm:
+    image: php8.4-fpm-xdebug:latest
+    build:
+      context: ./
+      dockerfile: Dockerfile.8.4.xdebug
+    restart: always
+    container_name: php8-4-fpm-xdebug
+    ports:
+    - "8997:9000"
+    volumes:
+    - ../:/var/www/webs/test_d11:cached
+    - ./fpm/8.4/php.ini:/opt/bitnami/php/etc/php.ini
+    - ./fpm/8.4/www.conf:/opt/bitnami/php/etc/php-fpm.d/www.conf
+    - ./fpm/8.4/log:/var/log
+    extra_hosts:
+      - "your.local.domain:your_ip_here"
+    networks:
+      compose-net:
+        ipv4_address: your_ip_here
+
+  nginx:
+    image: nginx:latest
+    restart: always
+    container_name: nginx
+    ports:
+    - "80:80"
+    # - "443:443"
+    volumes:
+    - ./nginx/logs:/var/log/nginx
+    - ../:/var/www/webs/test_d11:cached
+    - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    - ./nginx/vhosts:/etc/nginx/vhosts
+    # - ./certbot/conf/:/etc/nginx/ssl/:ro
+    networks:
+      compose-net:
+        ipv4_address: your_ip_here
+
+  node-test:
+    image: node:18
+    container_name: node-test-vite
+    restart: unless-stopped
+    working_dir: /var/www/webs/test_d11/web/themes/custom/react/react-src
+    environment:
+      - NODE_ENV=development
+      - SHELL=/bin/sh
+    volumes:
+      - ../:/var/www/webs/test_d11:cached
+    command: sh -c "npm install && npm run watch"
+    ports:
+      - "5174:5173"
+    networks:
+      compose-net:
+        ipv4_address: your_ip_here
+
+networks:
+  compose-net:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: your_subnet_here

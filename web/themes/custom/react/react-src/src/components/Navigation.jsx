@@ -13,6 +13,7 @@ import {
 import { styled } from '@mui/material/styles';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useNavigate } from 'react-router-dom';
 
 // 自定义搜索输入框样式
 const Search = styled('div')(({ theme }) => ({
@@ -69,6 +70,7 @@ const Navigation = ({
   activeTab = 'home'
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
 
   // 语言配置
@@ -78,9 +80,27 @@ const Navigation = ({
     { code: 'es', label: 'Español' }
   ];
 
+  // 语言路径配置
+  const languageConfig = {
+    'en': { code: 'en', urlAlias: '' },
+    'es': { code: 'es', urlAlias: '/es' },
+    'zh-hans': { code: 'zh-hans', urlAlias: '/zh-hans' }
+  };
+
   const handleSearch = () => {
+    if (!searchQuery.trim()) return;
+
+    // 构建搜索URL，导向到recipes页面
+    const langConfig = languageConfig[currentLanguage];
+    const basePath = langConfig.urlAlias || '';
+    const searchUrl = `${basePath}/recipes?search=${encodeURIComponent(searchQuery.trim())}`;
+
+    // 导航到recipes页面并传递搜索参数
+    navigate(searchUrl);
+
+    // 如果父组件提供了搜索处理函数，也调用它
     if (onSearch) {
-      onSearch(searchQuery);
+      onSearch(searchQuery.trim());
     }
   };
 
@@ -88,6 +108,13 @@ const Navigation = ({
     if (e.key === 'Enter') {
       handleSearch();
     }
+  };
+
+  // 获取导航链接URL
+  const getNavUrl = (path) => {
+    const langConfig = languageConfig[currentLanguage];
+    const basePath = langConfig.urlAlias || '';
+    return path === '/' ? (basePath || '/') : `${basePath}${path}`;
   };
 
   return (
@@ -161,12 +188,17 @@ const Navigation = ({
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography
               variant="h6"
-              component="div"
+              component={Link}
+              to={getNavUrl('/')}
               sx={{
                 color: '#F15D22',
                 fontFamily: 'Georgia, serif',
                 fontSize: '2rem',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
+                textDecoration: 'none',
+                '&:hover': {
+                  textDecoration: 'none'
+                }
               }}
             >
               umami
@@ -187,45 +219,57 @@ const Navigation = ({
           {/* 主导航 */}
           <Box sx={{ display: 'flex' }}>
             <Button
+              component={Link}
+              to={getNavUrl('/')}
               sx={{
                 color: '#333',
                 borderBottom: activeTab === 'home' ? '2px solid #F15D22' : 'none',
                 borderRadius: 0,
                 px: 2,
                 py: 2,
+                textDecoration: 'none',
                 '&:hover': {
                   backgroundColor: 'transparent',
-                  borderBottom: '2px solid #F15D22'
+                  borderBottom: '2px solid #F15D22',
+                  textDecoration: 'none'
                 }
               }}
             >
               {t('homepage.home')}
             </Button>
             <Button
+              component={Link}
+              to={getNavUrl('/articles')}
               sx={{
                 color: '#333',
                 borderBottom: activeTab === 'articles' ? '2px solid #F15D22' : 'none',
                 borderRadius: 0,
                 px: 2,
                 py: 2,
+                textDecoration: 'none',
                 '&:hover': {
                   backgroundColor: 'transparent',
-                  borderBottom: '2px solid #F15D22'
+                  borderBottom: '2px solid #F15D22',
+                  textDecoration: 'none'
                 }
               }}
             >
               {t('homepage.articles')}
             </Button>
             <Button
+              component={Link}
+              to={getNavUrl('/recipes')}
               sx={{
                 color: '#333',
                 borderBottom: activeTab === 'recipes' ? '2px solid #F15D22' : 'none',
                 borderRadius: 0,
                 px: 2,
                 py: 2,
+                textDecoration: 'none',
                 '&:hover': {
                   backgroundColor: 'transparent',
-                  borderBottom: '2px solid #F15D22'
+                  borderBottom: '2px solid #F15D22',
+                  textDecoration: 'none'
                 }
               }}
             >

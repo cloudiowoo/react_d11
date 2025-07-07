@@ -625,7 +625,21 @@ const RecipeDetail = () => {
           }}>
             {relatedRecipes.map((relatedRecipe) => {
               const recipeImage = getImageUrl(relatedRecipe.fields?.field_media_image?.image);
-              const difficulty = relatedRecipe.fields?.field_difficulty || 'Medium';
+
+              // 修复难度字段的处理 - 防止渲染对象
+              let difficulty = 'Medium';
+              if (relatedRecipe.fields?.field_difficulty) {
+                const difficultyField = relatedRecipe.fields.field_difficulty;
+                if (typeof difficultyField === 'string') {
+                  difficulty = difficultyField;
+                } else if (difficultyField.value && typeof difficultyField.value === 'string') {
+                  difficulty = difficultyField.value;
+                } else if (difficultyField.processed && typeof difficultyField.processed === 'string') {
+                  difficulty = difficultyField.processed.replace(/<[^>]*>/g, '');
+                } else {
+                  console.warn('无法解析难度字段:', difficultyField);
+                }
+              }
 
               return (
                 <Box
